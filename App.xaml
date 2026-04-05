@@ -1,0 +1,56 @@
+﻿<Application x:Class="VideoConverter.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:VideoConverter"
+             StartupUri="MainWindow.xaml">
+    <!-- 
+    ========================================
+    FFmpeg Video Converter - Application Configuration
+    ========================================
+    
+    PURPOSE:
+    This is the application manifest for the VideoConverter WPF application.
+    It configures global application settings and resources.
+    
+    ATTRIBUTES:
+    - x:Class="VideoConverter.App"
+      The code-behind class that handles application-level events (defined in App.xaml.cs)
+      
+    - xmlns:local="clr-namespace:VideoConverter"
+      Local namespace reference for application types and resources
+      
+    - StartupUri="MainWindow.xaml"
+      Specifies that MainWindow.xaml should be loaded and displayed when the application starts
+      
+    APPLICATION FLOW:
+    1. Application.xaml (this file) is parsed by WPF framework
+    2. App.xaml.cs constructor is called
+    3. Startup event handler executes (if defined)
+    4. MainWindow.xaml is loaded based on StartupUri
+    5. MainWindow.xaml.cs constructor and InitializeComponent() execute
+    6. Application window is displayed to user
+    
+    RESOURCES SECTION:
+    The Application.Resources section can contain:
+    - Styles for consistent UI appearance
+    - Data templates for custom data displays
+    - Brushes and colors for theming
+    - Converters for data binding transformations
+    
+    Currently empty - can be expanded with global styles as application grows.
+    -->
+    <Application.Resources>
+        <!-- 
+        FUTURE ENHANCEMENTS:
+        Add global WPF resources here such as:
+        
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="Margin" Value="5"/>
+        </Style>
+        
+        <SolidColorBrush x:Key="PrimaryBrush" Color="#FF007ACC"/>
+        <SolidColorBrush x:Key="ErrorBrush" Color="#FFE81123"/>
+        -->
+    </Application.Resources>
+</Application>

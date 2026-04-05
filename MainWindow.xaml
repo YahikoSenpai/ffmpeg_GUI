@@ -1,0 +1,226 @@
+﻿<Window x:Class="VideoConverter.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:VideoConverter.Localization"
+    Title="FFmpeg Converter" Height="500" Width="700">
+<!-- 
+========================================
+FFmpeg Video Converter - Main Window
+========================================
+    
+PURPOSE:
+This is the primary user interface for the VideoConverter application. It provides
+a user-friendly form for converting video files between different formats (AVI, MP4, WebM)
+using FFmpeg command-line tools.
+    
+LAYOUT STRUCTURE:
+The window uses a Grid with 5 rows organized as follows:
+- Row 0 (Auto):    Control buttons and format selector
+- Row 1 (*):       File list display (expandable)
+- Row 2 (Auto):    Start conversion button
+- Row 3 (Auto):    Spacer/separator (empty row)
+- Row 4 (Auto):    Log output display
+    
+KEY FEATURES:
+1. File Selection: Add files via dialog or drag-and-drop
+2. Output Folder: Select where converted files are saved
+3. Format Selection: Choose target format (AVI, MP4, WebM)
+4. Batch Processing: Convert multiple files in sequence
+5. Real-time Logging: View conversion progress and FFmpeg output
+6. Drag-and-Drop Support: Convenient file addition without dialog
+7. Language Selection: Switch UI between Hungarian, English, and German
+    
+STYLING:
+- All margins set to 10px for consistent spacing
+- Buttons sized at 120px width for uniformity
+- ListBox has expandable row (height="*") to fill available space
+- Log window uses auto-scroll for latest messages
+-->
+
+<Grid Margin="10">
+<Grid.RowDefinitions>
+    <!-- Top control row with buttons and format selector -->
+    <RowDefinition Height="Auto"/>
+    <!-- File list display area (expandable) -->
+    <RowDefinition Height="*"/>
+    <!-- Start conversion button -->
+    <RowDefinition Height="Auto"/>
+    <!-- Empty spacer row -->
+    <RowDefinition Height="Auto"/>
+    <!-- Log output display area -->
+    <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <!-- 
+    ========================================
+    ROW 0: CONTROL PANEL
+    ========================================
+    Contains buttons for file and folder selection, format selection dropdown, and language selector.
+    Organized horizontally with consistent spacing.
+    Uses DockPanel to position language selector on the right side.
+    -->
+    <DockPanel Margin="0 0 0 10">
+        <!-- 
+        ComboBox: Language Selector (Top Right)
+        DOCKED: Right
+        BINDING: ItemsSource and SelectedValuePath bound to LocalizationService
+        BEHAVIOR: Allows users to switch between Hungarian, English, and German
+                 Updates all UI text when selection changes
+        -->
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
+                <TextBlock 
+                    Text="{Binding Source={x:Static local:LocalizationService.Instance}, Path=LanguageLabel}"
+                    Margin="0 0 5 0" 
+                    VerticalAlignment="Center"
+                    FontWeight="Bold"/>
+                <ComboBox 
+                    x:Name="LanguageBox"
+                    Width="100"
+                    ItemsSource="{Binding Source={x:Static local:LocalizationService.Instance}, Path=SupportedLanguages}"
+                    SelectedIndex="0"
+                    SelectionChanged="LanguageBox_SelectionChanged"/>
+            </StackPanel>
+
+        <!-- Main control panel (left side) -->
+        <StackPanel Orientation="Horizontal" Margin="0 0 0 0">
+            <!-- 
+            Button: "Add Files" (localized)
+            EVENT: Click="AddFiles_Click"
+            BINDING: Content bound to LocalizationService.AddFiles property
+            BEHAVIOR: Opens a file dialog allowing selection of .mp4 or .webm files
+                     Selected files are added to the FileList ListBox
+            -->
+            <Button 
+                Width="120" 
+                Margin="0 0 10 0" 
+                Click="AddFiles_Click"
+                Content="{Binding Source={x:Static local:LocalizationService.Instance}, Path=AddFiles}"/>
+                
+            
+            
+            <!-- 
+            Button: "Select Output Folder" (localized)
+            EVENT: Click="SelectOutput_Click"
+            BINDING: Content bound to LocalizationService.SelectOutput property
+            BEHAVIOR: Opens a folder picker dialog
+                     Selected path is stored and displayed in OutputFolderText
+            -->
+            <Button 
+                Width="120" 
+                Click="SelectOutput_Click"
+                Content="{Binding Source={x:Static local:LocalizationService.Instance}, Path=SelectOutput}"/>
+            
+            <!-- 
+            TextBlock: OutputFolderText
+            DISPLAYS: The currently selected output folder path
+            BINDING: Updated by SelectOutput_Click event handler
+            -->
+            <TextBlock x:Name="OutputFolderText" Margin="10 0 0 0" VerticalAlignment="Center"/>
+
+            <!-- 
+            Label: "Format:" (localized)
+            BINDING: Text bound to LocalizationService.Format property
+            Indicates the adjacent ComboBox purpose
+            -->
+            <TextBlock 
+                Text="{Binding Source={x:Static local:LocalizationService.Instance}, Path=Format}" 
+                Margin="20 0 5 0" 
+                VerticalAlignment="Center"/>
+            
+            <!-- 
+            ComboBox: FormatBox
+            CONTAINS: Three format options (ComboBoxItems)
+            DEFAULT: Index 0 (avi)
+            OPTIONS:
+              - avi:  MPEG-4 Part 2 video + MP3 audio
+              - mp4:  H.264 video + AAC audio
+              - webm: VP9 video + Opus audio
+            USAGE: Selected format is used by BuildArguments() for conversion parameters
+            -->
+            <ComboBox x:Name="FormatBox" Width="80" SelectedIndex="0">
+                <ComboBoxItem Content="avi"/>
+                <ComboBoxItem Content="mp4"/>
+                <ComboBoxItem Content="webm"/>
+            </ComboBox>
+        </StackPanel>
+        </DockPanel>
+
+        <!-- 
+        ========================================
+        ROW 1: FILE LIST DISPLAY
+        ========================================
+        ListBox for displaying selected video files to be converted.
+        Supports drag-and-drop file addition for user convenience.
+        Expands to fill available vertical space (Row height = "*").
+        -->
+        <ListBox x:Name="FileList" Grid.Row="1" AllowDrop="True"
+                 Drop="FileList_Drop" DragOver="FileList_DragOver">
+            <!-- 
+            EVENTS:
+              Drop="FileList_Drop"       - Handles files dropped onto the ListBox
+              DragOver="FileList_DragOver" - Provides visual feedback during drag operations
+            BEHAVIOR:
+              - Displays full file paths of selected video files
+              - When files are dropped, filters for .mp4 and .webm only
+              - Double-click to select/deselect items
+              - Cannot be directly edited by user
+            -->
+        </ListBox>
+
+        <!-- 
+        ========================================
+        ROW 2: START CONVERSION BUTTON
+        ========================================
+        Large button to initiate the batch conversion process.
+        Triggers validation and sequential conversion of all files in FileList.
+        -->
+        <Button 
+            Grid.Row="2" 
+            Height="35" 
+            Margin="0 10 0 10"
+            Click="Start_Click"
+            Content="{Binding Source={x:Static local:LocalizationService.Instance}, Path=StartConversion}"/>
+        <!-- 
+        BUTTON: "Start Conversion" (localized)
+        EVENT: Click="Start_Click"
+        BINDING: Content bound to LocalizationService.StartConversion property
+        BEHAVIOR:
+          1. Validates that FileList contains at least one file
+          2. Validates that outputFolder has been selected
+          3. Iterates through each file in FileList:
+             a. Gets video duration using GetDuration()
+             b. Constructs output filename with selected format
+             c. Executes FFmpeg conversion with BuildArguments() parameters
+             d. Logs progress to LogBox
+          4. Displays "Conversion complete" message when finished
+        -->
+
+        <!-- Row 3 is intentionally empty as a spacer -->
+
+        <!-- 
+        ========================================
+        ROW 4: LOG OUTPUT DISPLAY
+        ========================================
+        TextBox for displaying real-time conversion progress and FFmpeg output.
+        Shows all FFmpeg stdout/stderr messages and application log messages.
+        -->
+        <TextBox x:Name="LogBox" Grid.Row="4" Height="150"
+                 VerticalScrollBarVisibility="Auto"
+                 IsReadOnly="True" TextWrapping="Wrap">
+            <!-- 
+            PROPERTIES:
+              x:Name="LogBox"                    - Control identifier for code-behind access
+              Grid.Row="4"                       - Positioned in bottom row
+              Height="150"                       - Fixed height of 150 pixels
+              VerticalScrollBarVisibility="Auto" - Scrollbar appears when content exceeds height
+              IsReadOnly="True"                  - User cannot edit log content
+              TextWrapping="Wrap"                - Long lines wrap to next line
+            BEHAVIOR:
+              - Appended to by Log() method with Environment.NewLine
+              - Automatically scrolls to show latest messages
+              - Displays FFmpeg progress output for user feedback during conversion
+              - Can be manually scrolled to review past messages
+            -->
+        </TextBox>
+    </Grid>
+</Window>
